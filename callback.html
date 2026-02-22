@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OAuth Callback</title>
+</head>
+<body>
+  <h1>Processing authentication...</h1>
+  <script>
+    // Extract the authorization code from the URL
+    const params = new URL(window.location.href).searchParams;
+    const code = params.get('code');
+    const state = params.get('state');
+    const error = params.get('error');
+
+    if (error) {
+      // Handle error
+      window.location.href = `chrome-extension://${state}/redirect.html?error=${encodeURIComponent(error)}`;
+    } else if (code) {
+      // Send code back to extension
+      window.location.href = `chrome-extension://${state}/redirect.html?code=${encodeURIComponent(code)}`;
+    } else {
+      document.body.innerHTML = '<p>Error: No authorization code received.</p>';
+    }
+  </script>
+</body>
+</html>
