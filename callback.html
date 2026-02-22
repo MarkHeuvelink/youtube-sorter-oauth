@@ -3,23 +3,36 @@
 <head>
   <title>OAuth Callback</title>
 </head>
-<body>
-  <h1>Processing authentication...</h1>
+<body style="font-family: Arial; text-align: center; padding-top: 50px;">
+  <h1>Completing sign in...</h1>
+  <p>You can close this window in a moment.</p>
   <script>
-    // Extract the authorization code from the URL
-    const params = new URL(window.location.href).searchParams;
-    const code = params.get('code');
-    const state = params.get('state');
+    // Extract token from URL hash
+    // Format: #access_token=xyz&token_type=Bearer&expires_in=3600&...
+    const hash = window.location.hash.substring(1);
+    const params = new URLSearchParams(hash);
+    
+    const token = params.get('access_token');
     const error = params.get('error');
+    const expiresIn = parseInt(params.get('expires_in') || '3600');
 
-    if (error) {
-      // Handle error
-      window.location.href = `chrome-extension://${state}/redirect.html?error=${encodeURIComponent(error)}`;
-    } else if (code) {
-      // Send code back to extension
-      window.location.href = `chrome-extension://${state}/redirect.html?code=${encodeURIComponent(code)}`;
-    } else {
-      document.body.innerHTML = '<p>Error: No authorization code received.</p>';
+    if (token) {
+      // Send token back to extension via message
+      const message = {
+        action: 'oauthToken',
+        token: token,
+        expiresIn: expiresIn
+      };
+      
+      // Try to communicate with the extension
+      if (window.opener) {
+        window.opener.postMessage(message, '*');
+      }
+      
+      document.body.innerHTML = '<h1>✅ Sign in successful!</h1><p>Closing...</p>';
+      setTimeout(() => window.close(), 1000);
+    } else if (error) {
+      document.body.innerHTML = `<h1>❌ Error: ${error}</h1><p>You can close this window.</p>`;
     }
   </script>
 </body>
